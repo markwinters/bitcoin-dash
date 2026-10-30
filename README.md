@@ -1,8 +1,9 @@
-# The Amazing Bitcoin — Holo Dashboard
+# Bitcoin Dashboard — ZwolseCode
 
-Een realtime Bitcoin-dashboard als one-pager, in holografische Marvel-comicstijl
-(foil-randen, halftone, POW!-bursts, speech bubbles). Puur statisch: HTML, CSS en
-JavaScript, zonder build-stap, server of API-keys.
+Een realtime Bitcoin-dashboard als one-pager, in de look and feel van het
+ZwolseCode design system: licht en koel, donkere eilanden, het violet-blauw-cyaan
+spectrum als lichtlijn. Puur statisch: HTML, CSS en JavaScript, zonder build-stap,
+server of API-keys.
 
 ## Databronnen
 
@@ -23,7 +24,9 @@ dan verbindt de pagina automatisch opnieuw.
 
 ```
 index.html          de pagina
-css/dashboard.css   holo/comic-stijl
+favicon.svg         ZwolseCode app-icoon
+css/tokens.css      design tokens (gegenereerd uit tokens.json van het design system)
+css/dashboard.css   layout en componenten
 js/data.js          ophalen en omzetten van de REST-bronnen
 js/dashboard.js     rendering, WebSockets, grafiek, effecten
 ```
