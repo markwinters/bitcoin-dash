@@ -28,6 +28,9 @@ js/data.js          ophalen en omzetten van de REST-bronnen
 js/dashboard.js     rendering, WebSockets, grafiek, effecten
 ```
 
+Verander je CSS of JS, verhoog dan het versienummer (`?v=…`) in de links in
+`index.html`, zodat browsers niet een oude gecachte versie blijven gebruiken.
+
 ## Lokaal bekijken
 
 Open `index.html` in je browser, of start een lokale server:
