@@ -13,10 +13,21 @@ class DashboardController extends Controller
 
     public function index(): View
     {
-        return view('dashboard', [
-            'snapshot' => $this->bitcoin->snapshot(),
+        return view('dashboard', self::viewData($this->bitcoin->snapshot()));
+    }
+
+    /**
+     * Viewdata voor het dashboard. Met $static worden assets relatief gelinkt en
+     * haalt de browser alle data zelf op (statische GitHub Pages-build).
+     */
+    public static function viewData(?array $snapshot, bool $static = false): array
+    {
+        return [
+            'snapshot' => $snapshot,
+            'static' => $static,
             'ranges' => array_keys(BitcoinDataService::RANGES),
-        ]);
+            'asset' => fn (string $path) => ($static ? $path : asset($path)).'?v='.filemtime(public_path($path)),
+        ];
     }
 
     public function snapshot(): JsonResponse

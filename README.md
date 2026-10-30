@@ -28,6 +28,20 @@ php artisan serve
 
 Open http://localhost:8000.
 
+## GitHub Pages
+
+GitHub Pages draait geen PHP, dus er is ook een statische build. Die gebruikt
+dezelfde pagina, maar de browser haalt alle data rechtstreeks bij de bronnen op
+(`public/js/static-api.js`) in plaats van via de Laravel-API.
+
+```bash
+php artisan bitcoin:export-static build   # statische site in ./build
+```
+
+De workflow `.github/workflows/pages.yml` doet dit automatisch bij elke push naar
+`main`. Eenmalig instellen: **Settings → Pages → Build and deployment → Source:
+GitHub Actions**.
+
 ## Endpoints
 
 - `GET /` — het dashboard

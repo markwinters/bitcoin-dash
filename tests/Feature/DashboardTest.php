@@ -115,4 +115,21 @@ class DashboardTest extends TestCase
         $this->getJson('/api/bitcoin')->assertOk()->assertJsonPath('market', null);
         $this->getJson('/api/bitcoin/chart')->assertStatus(503);
     }
+
+    public function test_static_export_builds_self_contained_site(): void
+    {
+        Http::preventStrayRequests();
+        $dir = 'storage/framework/testing/static-export';
+
+        $this->artisan('bitcoin:export-static', ['path' => $dir])->assertSuccessful();
+
+        $html = file_get_contents(base_path("$dir/index.html"));
+        $this->assertStringContainsString('endpoints: null', $html);
+        $this->assertStringContainsString('src="js/static-api.js?v=', $html);
+        $this->assertStringContainsString('href="css/dashboard.css?v=', $html);
+        $this->assertFileExists(base_path("$dir/js/dashboard.js"));
+        $this->assertFileExists(base_path("$dir/.nojekyll"));
+
+        \Illuminate\Support\Facades\File::deleteDirectory(base_path($dir));
+    }
 }

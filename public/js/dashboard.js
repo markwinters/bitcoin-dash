@@ -8,6 +8,17 @@
     'use strict';
 
     const { snapshot: initial, endpoints } = window.BTC_CONFIG;
+
+    // Laravel-API, of (statische GitHub Pages-build) rechtstreeks uit de bronnen via static-api.js.
+    const getJson = async (url) => {
+        const res = await fetch(url, { headers: { Accept: 'application/json' } });
+        if (!res.ok) throw new Error(res.statusText);
+        return res.json();
+    };
+    const api = window.BTC_STATIC_API ?? {
+        snapshot: () => getJson(endpoints.snapshot),
+        chart: (range, currency) => getJson(`${endpoints.chart}?range=${range}&currency=${currency}`),
+    };
     const $ = (sel, root = document) => root.querySelector(sel);
     const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
     const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -467,9 +478,7 @@
 
     async function refreshSnapshot() {
         try {
-            const res = await fetch(endpoints.snapshot, { headers: { Accept: 'application/json' } });
-            if (!res.ok) throw new Error(res.statusText);
-            const data = await res.json();
+            const data = await api.snapshot();
             // Behoud live netwerkdata als de server (nog) een ouder blok kent.
             if (state.snapshot?.network?.height > (data.network?.height ?? 0)) data.network = state.snapshot.network;
             state.snapshot = data;
@@ -492,9 +501,7 @@
         const status = $('#chart-status');
         status.textContent = 'Grafiek laden…';
         try {
-            const url = `${endpoints.chart}?range=${state.range}&currency=${state.currency}`;
-            const res = await fetch(url, { headers: { Accept: 'application/json' } });
-            const data = await res.json();
+            const data = await api.chart(state.range, state.currency);
             if (id !== chartReq) return;
             state.candles = (data.candles ?? []).map((c) => ({ t: c.t * 1000, c: c.c }));
             if (state.candles.length < 2) throw new Error('geen data');
@@ -687,6 +694,7 @@
     setInterval(tickCountdown, 1000);
     setInterval(() => renderBlocks(state.snapshot?.network?.blocks ?? []), 15000);
     loadChart();
+    if (!initial?.market) refreshSnapshot();
     setInterval(() => { if (!document.hidden) refreshSnapshot(); }, 30000);
     setInterval(() => { if (!document.hidden && state.range !== '1d') loadChart(); }, 5 * 60000);
 

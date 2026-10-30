@@ -10,7 +10,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Rubik:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}?v={{ filemtime(public_path('css/dashboard.css')) }}">
+    <link rel="stylesheet" href="{{ $asset('css/dashboard.css') }}">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%23f7931a' stroke='%23000' stroke-width='4'/%3E%3Ctext x='32' y='45' font-size='38' font-weight='900' text-anchor='middle' fill='%23fff' font-family='Arial'%3E%E2%82%BF%3C/text%3E%3C/svg%3E">
 </head>
 <body>
@@ -233,12 +233,12 @@
     <script>
         window.BTC_CONFIG = {
             snapshot: @json($snapshot),
-            endpoints: {
-                snapshot: @json(route('bitcoin.snapshot')),
-                chart: @json(route('bitcoin.chart')),
-            },
+            endpoints: @json($static ? null : ['snapshot' => route('bitcoin.snapshot'), 'chart' => route('bitcoin.chart')]),
         };
     </script>
-    <script src="{{ asset('js/dashboard.js') }}?v={{ filemtime(public_path('js/dashboard.js')) }}" defer></script>
+    @if ($static)
+        <script src="{{ $asset('js/static-api.js') }}" defer></script>
+    @endif
+    <script src="{{ $asset('js/dashboard.js') }}" defer></script>
 </body>
 </html>
