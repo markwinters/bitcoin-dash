@@ -5,12 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#0b0820">
     <title>The Amazing Bitcoin — Holo Dashboard</title>
-    <meta name="description" content="Realtime Bitcoin dashboard in holografische comic-stijl. Live koers via Coinbase, marktdata via CoinGecko en netwerkdata via mempool.space.">
+    <meta name="description" content="Realtime Bitcoin dashboard in holografische comic-stijl. Live koers via Coinbase, marktdata via CoinGecko en netwerkdata via mempool.space — allemaal publieke bronnen.">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Rubik:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ $asset('css/dashboard.css') }}">
+    <link rel="stylesheet" href="css/dashboard.css">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%23f7931a' stroke='%23000' stroke-width='4'/%3E%3Ctext x='32' y='45' font-size='38' font-weight='900' text-anchor='middle' fill='%23fff' font-family='Arial'%3E%E2%82%BF%3C/text%3E%3C/svg%3E">
 </head>
 <body>
@@ -19,12 +19,12 @@
     </div>
     <div class="halftone-bg" aria-hidden="true"></div>
 
-    {{-- Comic burst die verschijnt bij grote koersbewegingen of een nieuw blok --}}
+    
     <div class="burst-layer" id="burst-layer" aria-hidden="true"></div>
 
     <div class="page">
 
-        {{-- ========== MASTHEAD ========== --}}
+        
         <header class="masthead panel holo" data-tilt>
             <div class="masthead-corner">
                 <span class="corner-label">Issue</span>
@@ -53,7 +53,7 @@
             </div>
         </header>
 
-        {{-- ========== HERO: PRIJS ========== --}}
+        
         <section class="hero">
             <article class="panel holo price-panel" data-tilt>
                 <div class="caption-box">Ondertussen, op de beurs…</div>
@@ -92,15 +92,16 @@
             </aside>
         </section>
 
-        {{-- ========== CHART ========== --}}
+        
         <section class="panel holo chart-panel" data-tilt="soft">
             <div class="chart-head">
                 <h2 class="panel-title"><span>Koersverloop</span><small id="chart-change">—</small></h2>
                 <div class="toggle" role="group" aria-label="Periode">
-                    @foreach ($ranges as $range)
-                        <button type="button" data-range="{{ $range }}">{{ ['1d' => '24U', '7d' => '7D', '30d' => '30D', '1y' => '1J'][$range] ?? strtoupper($range) }}</button>
-                    @endforeach
-                </div>
+                                            <button type="button" data-range="1d">24U</button>
+                                            <button type="button" data-range="7d">7D</button>
+                                            <button type="button" data-range="30d">30D</button>
+                                            <button type="button" data-range="1y">1J</button>
+                                    </div>
             </div>
             <div class="chart" id="chart">
                 <svg id="chart-svg" preserveAspectRatio="none" role="img" aria-label="Koersgrafiek Bitcoin"></svg>
@@ -109,7 +110,7 @@
             </div>
         </section>
 
-        {{-- ========== MARKT ========== --}}
+        
         <h2 class="chapter"><span>Hoofdstuk 1</span> De Markt</h2>
         <section class="grid">
             <article class="panel holo stat" data-tilt>
@@ -167,7 +168,7 @@
             </article>
         </section>
 
-        {{-- ========== NETWERK ========== --}}
+        
         <h2 class="chapter"><span>Hoofdstuk 2</span> Het Netwerk</h2>
         <section class="grid">
             <article class="panel holo stat" data-tilt>
@@ -212,7 +213,7 @@
             </article>
         </section>
 
-        {{-- ========== BLOKKEN ========== --}}
+        
         <h2 class="chapter"><span>Hoofdstuk 3</span> De Laatste Blokken</h2>
         <section class="blocks" id="blocks">
             <div class="block-empty">Blokken laden…</div>
@@ -226,19 +227,11 @@
                 Netwerk: <a href="https://mempool.space" target="_blank" rel="noopener">mempool.space</a> ·
                 Sentiment: <a href="https://alternative.me/crypto/fear-and-greed-index/" target="_blank" rel="noopener">alternative.me</a>
             </p>
-            <p class="disclaimer">Geen financieel advies. Zelfs superhelden doen hun eigen onderzoek. · Laatste server-update <span id="updated-at">—</span></p>
+            <p class="disclaimer">Geen financieel advies. Zelfs superhelden doen hun eigen onderzoek. · Laatste data-update <span id="updated-at">—</span></p>
         </footer>
     </div>
 
-    <script>
-        window.BTC_CONFIG = {
-            snapshot: @json($snapshot),
-            endpoints: @json($static ? null : ['snapshot' => route('bitcoin.snapshot'), 'chart' => route('bitcoin.chart')]),
-        };
-    </script>
-    @if ($static)
-        <script src="{{ $asset('js/static-api.js') }}" defer></script>
-    @endif
-    <script src="{{ $asset('js/dashboard.js') }}" defer></script>
+    <script src="js/data.js" defer></script>
+    <script src="js/dashboard.js" defer></script>
 </body>
 </html>

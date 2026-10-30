@@ -1,8 +1,9 @@
 /* ==========================================================================
-   Client-side variant van App\Services\BitcoinDataService voor de statische
-   GitHub Pages-build (geen PHP). Haalt alles rechtstreeks uit de publieke
-   API's (allemaal CORS-vriendelijk) en geeft hetzelfde formaat terug als
-   /api/bitcoin en /api/bitcoin/chart.
+   Databronnen — alleen publieke, CORS-vriendelijke API's zonder API-key:
+   - CoinGecko:      marktdata (marktkapitalisatie, volume, ATH, supply)
+   - Coinbase:       koershistorie (candles), met CoinGecko als reserve
+   - mempool.space:  blokken, fees, mempool, hashrate, difficulty
+   - alternative.me: Fear & Greed index
    ========================================================================== */
 (() => {
     'use strict';
@@ -26,7 +27,7 @@
         return asText ? res.text() : res.json();
     };
 
-    // Laatst bekende goede waarde per bron (stale-while-error), net als de Laravel-cache.
+    // Laatst bekende goede waarde per bron, zodat een haperende API het dashboard niet leegmaakt.
     const last = {};
     const remember = async (key, fn) => {
         try { return (last[key] = await fn()); } catch { return last[key] ?? null; }
@@ -155,5 +156,5 @@
         return { range, currency, candles };
     }
 
-    window.BTC_STATIC_API = { snapshot, chart };
+    window.BTC_API = { snapshot, chart };
 })();

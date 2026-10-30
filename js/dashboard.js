@@ -2,23 +2,12 @@
    The Amazing Bitcoin — realtime dashboard
    - Live koers + trades: Coinbase Exchange WebSocket (ticker channel)
    - Nieuwe blokken + fees: mempool.space WebSocket
-   - Markt/netwerk-snapshot + grafiek: Laravel API (server-side gecached)
+   - Markt/netwerk-snapshot + grafiek: publieke API's via data.js
    ========================================================================== */
 (() => {
     'use strict';
 
-    const { snapshot: initial, endpoints } = window.BTC_CONFIG;
-
-    // Laravel-API, of (statische GitHub Pages-build) rechtstreeks uit de bronnen via static-api.js.
-    const getJson = async (url) => {
-        const res = await fetch(url, { headers: { Accept: 'application/json' } });
-        if (!res.ok) throw new Error(res.statusText);
-        return res.json();
-    };
-    const api = window.BTC_STATIC_API ?? {
-        snapshot: () => getJson(endpoints.snapshot),
-        chart: (range, currency) => getJson(`${endpoints.chart}?range=${range}&currency=${currency}`),
-    };
+    const api = window.BTC_API; // zie data.js
     const $ = (sel, root = document) => root.querySelector(sel);
     const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
     const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -31,7 +20,7 @@
     const state = {
         currency: storage.get('btc.currency', 'eur'),
         range: storage.get('btc.range', '1d'),
-        snapshot: initial,
+        snapshot: null,
         live: { usd: null, eur: null }, // laatste Coinbase ticker per valuta
         candles: [],
         lastBurstPrice: null,
@@ -479,7 +468,7 @@
     async function refreshSnapshot() {
         try {
             const data = await api.snapshot();
-            // Behoud live netwerkdata als de server (nog) een ouder blok kent.
+            // Behoud live netwerkdata als de API (nog) een ouder blok kent.
             if (state.snapshot?.network?.height > (data.network?.height ?? 0)) data.network = state.snapshot.network;
             state.snapshot = data;
             renderMarket();
@@ -493,7 +482,6 @@
 
     /* ---------- Grafiek ---------- */
 
-    const svgNS = 'http://www.w3.org/2000/svg';
     let chartReq = 0;
 
     async function loadChart() {
@@ -689,12 +677,11 @@
     bindChartHover();
     renderMarket();
     renderNetwork();
-    if (initial?.generated_at) setText('updated-at', new Date(initial.generated_at).toLocaleTimeString('nl-NL'));
     tickCountdown();
     setInterval(tickCountdown, 1000);
     setInterval(() => renderBlocks(state.snapshot?.network?.blocks ?? []), 15000);
     loadChart();
-    if (!initial?.market) refreshSnapshot();
+    refreshSnapshot();
     setInterval(() => { if (!document.hidden) refreshSnapshot(); }, 30000);
     setInterval(() => { if (!document.hidden && state.range !== '1d') loadChart(); }, 5 * 60000);
 
