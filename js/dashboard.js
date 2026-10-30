@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Bitcoin Dashboard
+   The Amazing Bitcoin — realtime dashboard
    - Live koers + trades: Coinbase Exchange WebSocket (ticker channel)
    - Nieuwe blokken + fees: mempool.space WebSocket
    - Markt/netwerk-snapshot + grafiek: publieke API's via data.js
@@ -23,37 +23,11 @@
         snapshot: null,
         live: { usd: null, eur: null }, // laatste Coinbase ticker per valuta
         candles: [],
+        lastBurstPrice: null,
+        lastBurstAt: 0,
         wsConnected: false,
     };
     if (!['usd', 'eur'].includes(state.currency)) state.currency = 'eur';
-    if (!['1d', '7d', '30d', '1y'].includes(state.range)) state.range = '1d';
-
-    /* ---------- Iconen (lijn 1,5px op 24px-raster) ---------- */
-
-    const ICONS = {
-        'zap': ['M13 2.75 4.75 13.25h6.5l-1 8 8.5-10.5h-6.5l.75-8Z'],
-        'code': ['m8 7.5-4.5 4.5L8 16.5M16 7.5l4.5 4.5-4.5 4.5M13.75 4.5l-3.5 15'],
-        'lock': ['M12 2.75 20 7.375v9.25L12 21.25l-8-4.625v-9.25Z', 'M9.25 11.25h5.5c.41 0 .75.34.75.75v3.5c0 .41-.34.75-.75.75h-5.5a.75.75 0 0 1-.75-.75V12c0-.41.34-.75.75-.75ZM10.25 11.25v-1a1.75 1.75 0 0 1 3.5 0v1'],
-        'shield': ['M12 2.75 19.25 5.5v5.75c0 4.4-3 8.1-7.25 9.75-4.25-1.65-7.25-5.35-7.25-9.75V5.5Z'],
-        'cube': ['M12 2.75 20 7.375v9.25L12 21.25l-8-4.625v-9.25Z', 'M4 7.375 12 12l8-4.625M12 12v9.25M4 16.625 12 12l8 4.625'],
-        'trend-up': ['m3.5 17 6-6 4 4L20.5 8', 'M14.5 8h6v6'],
-        'future': ['M5.5 16.5 18 4M10 4h8v8M4 20.25h16'],
-        'arrow-up-right': ['M7 17 17 7M8.5 7H17v8.5'],
-        'arrow-right': ['M4.5 12h15M13.5 6l6 6-6 6'],
-    };
-    const PLAIN = new Set(['arrow-up-right', 'arrow-right']); // pijlen nemen de tekstkleur over
-
-    function renderIcons() {
-        $$('[data-icon]').forEach((el, i) => {
-            const name = el.dataset.icon;
-            const size = el.dataset.size || 32;
-            const grad = !PLAIN.has(name);
-            const id = `icon-${i}`;
-            el.innerHTML = `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="${grad ? `url(#${id})` : 'currentColor'}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                ${grad ? `<defs><linearGradient id="${id}" x1="3" y1="3" x2="21" y2="21" gradientUnits="userSpaceOnUse"><stop offset="0" style="stop-color:var(--icon-start)"/><stop offset="1" style="stop-color:var(--icon-end)"/></linearGradient></defs>` : ''}
-                ${ICONS[name].map((d) => `<path d="${d}"/>`).join('')}</svg>`;
-        });
-    }
 
     /* ---------- Formatters ---------- */
 
@@ -75,16 +49,16 @@
         while (h >= 1000 && i < units.length - 1) { h /= 1000; i++; }
         return `${num(h, 1)} ${units[i]}`;
     };
+    const bytes = (b) => b == null ? '—' : `${num(b / 1e6, 1)} MvB`;
     const date = (iso, opts = { day: 'numeric', month: 'short', year: 'numeric' }) => iso ? new Date(iso).toLocaleDateString('nl-NL', opts) : '—';
     const ago = (ts) => {
         const s = Math.max(0, Math.round(Date.now() / 1000 - ts));
-        if (s < 60) return `${s} s geleden`;
+        if (s < 60) return `${s}s geleden`;
         if (s < 3600) return `${Math.floor(s / 60)} min geleden`;
         return `${Math.floor(s / 3600)} uur geleden`;
     };
     const setText = (id, text) => { const el = document.getElementById(id); if (el && el.textContent !== text) el.textContent = text; };
     const setTrend = (el, v) => { el.classList.remove('up', 'down'); const t = trend(v); if (t) el.classList.add(t); };
-    const escapeHtml = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 
     /* ---------- Afgeleide waarden ---------- */
 
@@ -100,7 +74,6 @@
     /* ---------- Rendering ---------- */
 
     let prevRendered = null;
-    let tickTimer;
 
     function renderPrice() {
         const price = livePrice();
@@ -109,20 +82,18 @@
         const el = $('#price');
 
         setText('price', money(price));
-        document.title = price ? `${money(price, 0)} — Bitcoin Dashboard` : 'Bitcoin Dashboard';
+        document.title = price ? `${money(price, 0)} · The Amazing Bitcoin` : 'The Amazing Bitcoin — Holo Dashboard';
 
-        // Korte kleurpuls bij een nieuwe tick: blauw omhoog, grijs omlaag.
         if (prevRendered != null && price != null && price !== prevRendered && !reducedMotion) {
             el.classList.remove('tick-up', 'tick-down');
+            void el.offsetWidth;
             el.classList.add(price > prevRendered ? 'tick-up' : 'tick-down');
-            clearTimeout(tickTimer);
-            tickTimer = setTimeout(() => el.classList.remove('tick-up', 'tick-down'), 250);
         }
         prevRendered = price;
 
         const change = liveChange24h();
         const badge = $('#change-24h');
-        badge.textContent = `${pct(change)} 24U`;
+        badge.textContent = `${pct(change)} 24u`;
         setTrend(badge, change);
 
         setText('bid', t?.bid ? money(t.bid) : '—');
@@ -141,10 +112,8 @@
 
         if (m?.ath && price) {
             const athChange = ((price - m.ath) / m.ath) * 100;
-            setText('ath-sub', price >= m.ath ? 'Nieuwe all-time high, vandaag.' : `${pct(athChange)} vanaf de top van ${date(m.ath_date)}.`);
+            setText('ath-sub', price >= m.ath ? '🚀 NIEUWE ATH! EXCELSIOR!' : `${pct(athChange)} vanaf ATH · ${date(m.ath_date)}`);
         }
-
-        renderLead();
     }
 
     function renderMarket() {
@@ -153,35 +122,32 @@
 
         setText('market-cap', compactMoney(m?.market_cap));
         setText('volume', compactMoney(m?.volume_24h));
-        setText('volume-btc', m?.volume_24h && m?.price ? `Ongeveer ${num(m.volume_24h / m.price)} BTC verhandeld.` : '—');
+        setText('volume-btc', m?.volume_24h && m?.price ? `≈ ${num(m.volume_24h / m.price)} BTC verhandeld` : '—');
         setText('ath', money(m?.ath, 0));
 
         $$('[data-perf]').forEach((el) => {
             const v = m?.[el.dataset.perf];
-            const dd = $('dd', el);
-            dd.textContent = pct(v, 1);
-            setTrend(dd, v);
+            const b = $('b', el);
+            b.textContent = pct(v, 1);
+            setTrend(b, v);
         });
 
         if (g?.circulating_supply) {
             const max = g.max_supply || 21e6;
             setText('supply', `${num(g.circulating_supply)} BTC`);
             $('#supply-bar').style.width = `${(g.circulating_supply / max) * 100}%`;
-            setText('supply-sub', `${num((g.circulating_supply / max) * 100, 2)}% van ${num(max)}. Nog ${num(max - g.circulating_supply)} te minen.`);
+            setText('supply-sub', `${num((g.circulating_supply / max) * 100, 2)}% van de ${num(max)} — nog ${num(max - g.circulating_supply)} te minen`);
         }
 
         const s = state.snapshot?.sentiment;
         if (s?.value != null) {
             setText('fng-value', String(s.value));
             setText('fng-label', translateFng(s.label));
-            setText('hero-fng', `${s.value} / 100`);
-            $('#fng-arc').setAttribute('stroke-dasharray', `${s.value} 100`);
-            const a = Math.PI * (1 - s.value / 100);
-            $('#fng-knob').setAttribute('cx', (100 + 84 * Math.cos(a)).toFixed(1));
-            $('#fng-knob').setAttribute('cy', (100 - 84 * Math.sin(a)).toFixed(1));
+            $('#fng-needle').style.transform = `rotate(${(s.value / 100) * 180 - 90}deg)`;
         }
 
         renderPrice();
+        renderSpeech();
     }
 
     function translateFng(label) {
@@ -194,30 +160,17 @@
         })[label] ?? label ?? '—';
     }
 
-    // Intro onder de hero-kop: stellig, met cijfers, zonder overtreffende trappen.
-    function renderLead() {
-        const c = liveChange24h();
-        const t = state.live[state.currency];
-        const m = market();
-        const low = t?.low24h ?? m?.low_24h;
-        const high = t?.high24h ?? m?.high_24h;
-        if (c == null) return;
-        const dir = c >= 0 ? 'hoger' : 'lager';
-        const text = `${pct(Math.abs(c), 1).replace('+', '')} ${dir} dan gisteren. Bandbreedte vandaag ${money(low, 0)} tot ${money(high, 0)}.`;
-        setText('hero-lead', text);
-    }
-
     function renderNetwork() {
         const n = state.snapshot?.network;
         if (!n) return;
 
-        setText('issue-number', num(n.height));
+        setText('issue-number', `#${num(n.height)}`);
         setText('height', num(n.height));
-        if (n.blocks?.[0]?.timestamp) setText('height-sub', `Laatste blok ${ago(n.blocks[0].timestamp)}.`);
+        if (n.blocks?.[0]?.timestamp) setText('height-sub', `Laatste blok ${ago(n.blocks[0].timestamp)}`);
         setText('hashrate', hashrate(n.hashrate));
 
         setText('mempool-count', n.mempool?.count != null ? `${num(n.mempool.count)} tx` : '—');
-        setText('mempool-sub', n.mempool?.vsize != null ? `${num(n.mempool.vsize / 1e6, 1)} MvB wacht op een blok.` : '—');
+        setText('mempool-sub', n.mempool?.vsize != null ? `${bytes(n.mempool.vsize)} wacht op een blok` : '—');
 
         setText('fee-low', n.fees ? String(n.fees.hourFee) : '—');
         setText('fee-mid', n.fees ? String(n.fees.halfHourFee) : '—');
@@ -229,13 +182,13 @@
         setTrend(diffEl, d.change);
         if (d.progress != null) $('#diff-bar').style.width = `${d.progress}%`;
         setText('diff-sub', d.remaining_blocks != null
-            ? `${num(d.progress, 1)}% van de periode. Nog ${num(d.remaining_blocks)} blokken, rond ${date(d.estimated_retarget)}.`
+            ? `${num(d.progress, 1)}% van de epoch · nog ${num(d.remaining_blocks)} blokken · ±${date(d.estimated_retarget)}`
             : '—');
 
         const h = n.halving;
         if (h) {
             $('#halving-bar').style.width = `${h.progress}%`;
-            setText('halving-sub', `Blok ${num(h.next_height)}. Beloning van ${num(h.subsidy, 3)} naar ${num(h.next_subsidy, 5)} BTC, rond ${date(h.estimated_date)}.`);
+            setText('halving-sub', `Blok ${num(h.next_height)} · nog ${num(h.remaining_blocks)} blokken · beloning ${num(h.subsidy, 3)} → ${num(h.next_subsidy, 5)} BTC · ±${date(h.estimated_date)}`);
         }
 
         renderBlocks(n.blocks ?? []);
@@ -246,19 +199,23 @@
         if (!blocks.length) return;
         const key = blocks.map((b) => b.height).join(',');
         if (wrap.dataset.key === key) {
+            // alleen relatieve tijden bijwerken
             $$('[data-ts]', wrap).forEach((el) => { el.textContent = ago(+el.dataset.ts); });
             return;
         }
-        const isUpdate = !!wrap.dataset.key;
         wrap.dataset.key = key;
-        wrap.innerHTML = blocks.map((b, i) => `
-            <li class="body-sm${isUpdate && i === 0 ? ' is-new' : ''}">
-                <a href="https://mempool.space/block/${encodeURIComponent(b.id ?? b.height)}" target="_blank" rel="noopener">
-                    <span class="block__height">${num(b.height)}</span>
-                    <span class="block__pool">${escapeHtml(b.pool ?? 'Onbekende pool')}</span>
-                    <span class="block__meta"><b>${num(b.tx_count)}</b> tx · <span data-ts="${b.timestamp}">${ago(b.timestamp)}</span></span>
-                </a>
-            </li>`).join('');
+        wrap.innerHTML = blocks.map((b) => `
+            <a class="block" href="https://mempool.space/block/${encodeURIComponent(b.id ?? b.height)}" target="_blank" rel="noopener" style="color:inherit;text-decoration:none">
+                <div class="block-height">#${num(b.height)}</div>
+                <div class="block-row"><span>Tx</span><b>${num(b.tx_count)}</b></div>
+                <div class="block-row"><span>Grootte</span><b>${b.size ? num(b.size / 1e6, 2) + ' MB' : '—'}</b></div>
+                <div class="block-row"><span>Tijd</span><b data-ts="${b.timestamp}">${ago(b.timestamp)}</b></div>
+                <div class="block-pool">${escapeHtml(b.pool ?? 'Onbekend')}</div>
+            </a>`).join('');
+    }
+
+    function escapeHtml(s) {
+        return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
     }
 
     /* ---------- Halving-countdown ---------- */
@@ -274,18 +231,84 @@
         $$('#halving-countdown [data-unit]').forEach((el) => { el.textContent = vals[el.dataset.unit]; });
     }
 
+    /* ---------- Verteller / speech bubble ---------- */
+
+    let lastSpeech = '';
+    function renderSpeech() {
+        const c = liveChange24h();
+        const fng = state.snapshot?.sentiment?.value;
+        let line;
+        if (c == null) line = 'Hou je vast, true believer… de data komt eraan!';
+        else if (c >= 5) line = `KA-BOOM! ${pct(c, 1)} in 24 uur — de bulls zijn onstuitbaar!`;
+        else if (c >= 1.5) line = `Met grote kracht komt grote winst: ${pct(c, 1)} vandaag!`;
+        else if (c > 0) line = `Een rustige dag in het multiversum… ${pct(c, 1)}. Satoshi glimlacht.`;
+        else if (c > -1.5) line = `Een klein schrammetje (${pct(c, 1)}). Helden laten zich niet kennen!`;
+        else if (c > -5) line = `OEF! ${pct(c, 1)}… de schurken van de bear market slaan terug!`;
+        else line = `KRAK! ${pct(c, 1)}! Tijd om de Avengers van de HODL te verzamelen!`;
+        if (fng != null && fng <= 20) line += ' (De markt beeft van angst…)';
+        if (fng != null && fng >= 80) line += ' (Hebzucht alarm!)';
+
+        if (line !== lastSpeech) {
+            const el = $('#speech');
+            el.textContent = line;
+            if (lastSpeech && !reducedMotion) { el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop'); }
+            lastSpeech = line;
+        }
+    }
+
+    /* ---------- Comic bursts ---------- */
+
+    const UP_WORDS = ['POW!', 'ZAP!', 'BAM!', 'WHAM!', 'KA-CHING!'];
+    const DOWN_WORDS = ['OEF!', 'KRAK!', 'BONK!', 'SPLAT!', 'AUW!'];
+
+    function burstSvg(fill) {
+        const pts = [];
+        const spikes = 14;
+        for (let i = 0; i < spikes * 2; i++) {
+            const r = i % 2 === 0 ? 50 : 34 + Math.random() * 6;
+            const a = (Math.PI * i) / spikes;
+            pts.push(`${(50 + r * Math.cos(a)).toFixed(1)},${(50 + r * Math.sin(a)).toFixed(1)}`);
+        }
+        return `<svg viewBox="-2 -2 104 104"><polygon points="${pts.join(' ')}" fill="${fill}" stroke="#07050f" stroke-width="3" stroke-linejoin="round"/></svg>`;
+    }
+
+    function burst(word, { fill = '#ffe14d', sub = '', x, y } = {}) {
+        if (reducedMotion || document.hidden) return;
+        const layer = $('#burst-layer');
+        const el = document.createElement('div');
+        el.className = 'burst';
+        el.style.left = `${x ?? 15 + Math.random() * 70}vw`;
+        el.style.top = `${y ?? 18 + Math.random() * 50}vh`;
+        el.innerHTML = `${burstSvg(fill)}<span>${escapeHtml(word)}${sub ? `<small>${escapeHtml(sub)}</small>` : ''}</span>`;
+        layer.appendChild(el);
+        el.addEventListener('animationend', () => el.remove(), { once: true });
+    }
+
+    function maybeBurst(price) {
+        const now = Date.now();
+        if (state.lastBurstPrice == null) { state.lastBurstPrice = price; return; }
+        const move = ((price - state.lastBurstPrice) / state.lastBurstPrice) * 100;
+        if (Math.abs(move) >= 0.15 && now - state.lastBurstAt > 8000) {
+            const up = move > 0;
+            const words = up ? UP_WORDS : DOWN_WORDS;
+            burst(words[Math.floor(Math.random() * words.length)], { fill: up ? '#2dffb3' : '#ff2e63', sub: pct(move, 2) });
+            state.lastBurstPrice = price;
+            state.lastBurstAt = now;
+        }
+    }
+
     /* ---------- Live trades ---------- */
 
     function pushTrade(t) {
         const list = $('#trades');
         $('.trades-empty', list)?.remove();
         const li = document.createElement('li');
-        li.className = `body-sm ${t.side}${t.size >= 1 ? ' large' : ''}`;
-        li.innerHTML = `<span class="side label">${t.side === 'buy' ? 'KOOP' : 'VERKOOP'}</span>
-            <span class="px">${money(t.price)}</span>
-            <span class="size">${num(t.size, 4)} BTC</span>`;
+        li.className = `${t.side}${t.size >= 1 ? ' whale' : ''}`;
+        li.innerHTML = `<span class="side">${t.side === 'buy' ? 'KOOP' : 'VERKOOP'}</span>
+            <span>${money(t.price)}</span>
+            <span class="size">${t.size >= 1 ? '🐋 ' : ''}${num(t.size, 4)} ₿</span>`;
         list.prepend(li);
-        while (list.children.length > 10) list.lastElementChild.remove();
+        while (list.children.length > 14) list.lastElementChild.remove();
     }
 
     /* ---------- Coinbase WebSocket ---------- */
@@ -356,11 +379,12 @@
         if (m.last_size && m.side) {
             pushTrade({ price, size: parseFloat(m.last_size), side: m.side === 'sell' ? 'sell' : 'buy' });
         }
+        maybeBurst(price);
         updateChartLive(price);
 
         if (!renderQueued) {
             renderQueued = true;
-            requestAnimationFrame(() => { renderQueued = false; renderPrice(); });
+            requestAnimationFrame(() => { renderQueued = false; renderPrice(); renderSpeech(); });
         }
     }
 
@@ -427,17 +451,19 @@
         };
 
         renderNetwork();
+        burst('KABOOM!', { fill: '#f7931a', sub: `Blok #${num(b.height)}`, x: 50, y: 40 });
     }
 
-    /* ---------- Live-status ---------- */
+    /* ---------- Live status pill ---------- */
 
     function setLive(mode) {
         const pill = $('#live-pill');
+        const label = { connecting: 'Verbinden…', live: 'Live', poll: 'Polling', offline: 'Offline' }[mode];
         pill.dataset.state = mode;
-        setText('live-text', { connecting: 'VERBINDEN', live: 'LIVE', poll: 'POLLING', offline: 'OFFLINE' }[mode]);
+        setText('live-text', label);
     }
 
-    /* ---------- Snapshot polling (markt/netwerk) ---------- */
+    /* ---------- Snapshot polling (fallback + markt/netwerk) ---------- */
 
     async function refreshSnapshot() {
         try {
@@ -461,7 +487,7 @@
     async function loadChart() {
         const id = ++chartReq;
         const status = $('#chart-status');
-        status.textContent = 'GRAFIEK LADEN';
+        status.textContent = 'Grafiek laden…';
         try {
             const data = await api.chart(state.range, state.currency);
             if (id !== chartReq) return;
@@ -473,21 +499,21 @@
             if (id !== chartReq) return;
             state.candles = [];
             $('#chart-svg').innerHTML = '';
-            status.textContent = 'GRAFIEKDATA NIET BESCHIKBAAR';
+            status.textContent = 'ARGH! Grafiekdata niet beschikbaar.';
         }
     }
 
     // Laatste punt van de 24u-grafiek meeschuiven met de live prijs.
-    let chartPending = false;
+    let chartRaf = false;
     function updateChartLive(price) {
         if (state.range !== '1d' || state.candles.length < 2) return;
         const last = state.candles[state.candles.length - 1];
         const now = Date.now();
         if (now - last.t > 5 * 60 * 1000) state.candles.push({ t: now, c: price });
         else last.c = price;
-        if (!chartPending) {
-            chartPending = true;
-            setTimeout(() => { chartPending = false; drawChart(); }, 1000);
+        if (!chartRaf) {
+            chartRaf = true;
+            setTimeout(() => { chartRaf = false; drawChart(); }, 1000);
         }
     }
 
@@ -499,7 +525,7 @@
         if (!W || !H) return;
         svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
 
-        const pad = { t: 12, r: 72, b: 28, l: 0 };
+        const pad = { t: 24, r: 70, b: 26, l: 12 };
         const min = Math.min(...pts.map((p) => p.c));
         const max = Math.max(...pts.map((p) => p.c));
         const span = max - min || 1;
@@ -516,47 +542,52 @@
         const lastX = x(t1);
         const lastY = y(last);
 
+        // y-as labels
         const ticks = [0, 0.25, 0.5, 0.75, 1].map((f) => min + span * f);
-        const grid = ticks.map((v) => `<line x1="0" x2="${W - pad.r}" y1="${y(v)}" y2="${y(v)}" stroke="#FFFFFF" stroke-opacity=".07"/>`).join('');
-        const yLabels = ticks.map((v) => `<text x="${W - pad.r + 12}" y="${y(v) + 4}" class="axis">${money(v, 0)}</text>`).join('');
+        const yLabels = ticks.map((v) => `<text x="${W - pad.r + 8}" y="${y(v) + 4}" class="axis">${money(v, 0)}</text>`).join('');
 
+        // x-as labels
         const fmtOpts = state.range === '1d' ? { hour: '2-digit', minute: '2-digit' } : state.range === '1y' ? { month: 'short', year: '2-digit' } : { day: 'numeric', month: 'short' };
-        const xLabels = [0.04, 0.35, 0.65, 0.96].map((f) => {
+        const xLabels = [0.05, 0.35, 0.65, 0.95].map((f) => {
             const t = t0 + (t1 - t0) * f;
-            return `<text x="${x(t)}" y="${H - 6}" class="axis" text-anchor="middle">${new Date(t).toLocaleString('nl-NL', fmtOpts)}</text>`;
+            return `<text x="${x(t)}" y="${H - 7}" class="axis" text-anchor="middle">${new Date(t).toLocaleString('nl-NL', fmtOpts)}</text>`;
         }).join('');
 
         svg.innerHTML = `
             <defs>
-                <linearGradient id="spectrum" x1="0" x2="1">
-                    <stop offset="0" stop-color="#7C3AED"/><stop offset=".5" stop-color="#2563EB"/><stop offset="1" stop-color="#00F0FF"/>
+                <linearGradient id="holo-stroke" x1="0" x2="1">
+                    <stop offset="0" stop-color="#ff4dd8"/><stop offset=".25" stop-color="#ffe14d"/>
+                    <stop offset=".5" stop-color="#2dffb3"/><stop offset=".75" stop-color="#4df3ff"/>
+                    <stop offset="1" stop-color="#8b5cff"/>
                 </linearGradient>
-                <linearGradient id="area" x1="0" x2="0" y1="0" y2="1">
-                    <stop offset="0" stop-color="#7C3AED" stop-opacity=".28"/>
-                    <stop offset="1" stop-color="#7C3AED" stop-opacity="0"/>
+                <linearGradient id="holo-area" x1="0" x2="0" y1="0" y2="1">
+                    <stop offset="0" stop-color="#8b5cff" stop-opacity=".55"/>
+                    <stop offset="1" stop-color="#8b5cff" stop-opacity="0"/>
                 </linearGradient>
-                <filter id="glow" x="-10%" y="-30%" width="120%" height="160%">
-                    <feGaussianBlur stdDeviation="6"/>
-                </filter>
+                <pattern id="dots" width="6" height="6" patternUnits="userSpaceOnUse">
+                    <circle cx="3" cy="3" r="1.1" fill="#fff" fill-opacity=".18"/>
+                </pattern>
             </defs>
-            <style>.axis{font:500 11px var(--font-sans);letter-spacing:.04em;fill:#9A9EA8;font-variant-numeric:tabular-nums}</style>
-            ${grid}
-            <path d="${area}" fill="url(#area)"/>
-            <path d="${line}" fill="none" stroke="url(#spectrum)" stroke-width="6" stroke-opacity=".45" filter="url(#glow)"/>
-            <path d="${line}" fill="none" stroke="url(#spectrum)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
-            <circle cx="${lastX}" cy="${lastY}" r="10" fill="#00F0FF" fill-opacity=".18"/>
-            <circle cx="${lastX}" cy="${lastY}" r="4" fill="#00F0FF"/>
+            <style>.axis{font:600 11px 'JetBrains Mono',monospace;fill:#b9b2e0}</style>
+            <path d="${area}" fill="url(#holo-area)"/>
+            <path d="${area}" fill="url(#dots)"/>
+            <path d="${line}" fill="none" stroke="#07050f" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"/>
+            <path d="${line}" fill="none" stroke="url(#holo-stroke)" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>
+            <line x1="${pad.l}" x2="${W - pad.r}" y1="${lastY}" y2="${lastY}" stroke="#fff" stroke-opacity=".35" stroke-dasharray="4 6"/>
+            <circle cx="${lastX}" cy="${lastY}" r="7" fill="#ffe14d" stroke="#07050f" stroke-width="3">
+                ${reducedMotion ? '' : '<animate attributeName="r" values="7;10;7" dur="1.4s" repeatCount="indefinite"/>'}
+            </circle>
             ${yLabels}${xLabels}
             <g id="crosshair" style="display:none">
-                <line id="ch-line" y1="${pad.t}" y2="${H - pad.b}" stroke="#FFFFFF" stroke-opacity=".35"/>
-                <circle id="ch-dot" r="5" fill="#0F1115" stroke="#A07CFF" stroke-width="2"/>
+                <line id="ch-line" y1="${pad.t}" y2="${H - pad.b}" stroke="#fff" stroke-width="2" stroke-dasharray="3 4"/>
+                <circle id="ch-dot" r="6" fill="#fff" stroke="#07050f" stroke-width="3"/>
             </g>`;
 
         const ch = $('#chart-change');
-        ch.textContent = pct(change);
+        ch.textContent = `${pct(change)} deze periode`;
         setTrend(ch, change);
 
-        svg._scale = { x, y, pts };
+        svg._scale = { x, y, pts, W };
     }
 
     function bindChartHover() {
@@ -592,7 +623,29 @@
         addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(drawChart, 120); });
     }
 
-    /* ---------- Schakelaars ---------- */
+    /* ---------- Holo-kaart tilt ---------- */
+
+    function bindTilt() {
+        if (reducedMotion || matchMedia('(hover: none)').matches) return;
+        $$('[data-tilt]').forEach((el) => {
+            const strength = el.dataset.tilt === 'soft' ? 2 : 6;
+            el.addEventListener('pointermove', (e) => {
+                const r = el.getBoundingClientRect();
+                const px = (e.clientX - r.left) / r.width;
+                const py = (e.clientY - r.top) / r.height;
+                el.style.setProperty('--mx', `${px * 100}%`);
+                el.style.setProperty('--my', `${py * 100}%`);
+                el.style.setProperty('--rx', `${(0.5 - py) * strength}deg`);
+                el.style.setProperty('--ry', `${(px - 0.5) * strength}deg`);
+            });
+            el.addEventListener('pointerleave', () => {
+                el.style.setProperty('--rx', '0deg');
+                el.style.setProperty('--ry', '0deg');
+            });
+        });
+    }
+
+    /* ---------- Toggles ---------- */
 
     function bindToggles() {
         const sync = () => {
@@ -604,7 +657,8 @@
             state.currency = b.dataset.currency;
             storage.set('btc.currency', state.currency);
             prevRendered = null;
-            $('#trades').innerHTML = '<li class="trades-empty body-sm">Wachten op de eerste trade.</li>';
+            state.lastBurstPrice = null;
+            $('#trades').innerHTML = '<li class="trades-empty">Wachten op de eerste trade…</li>';
             sync(); renderMarket(); loadChart();
         }));
         $$('[data-range]').forEach((b) => b.addEventListener('click', () => {
@@ -618,9 +672,11 @@
 
     /* ---------- Start ---------- */
 
-    renderIcons();
     bindToggles();
+    bindTilt();
     bindChartHover();
+    renderMarket();
+    renderNetwork();
     tickCountdown();
     setInterval(tickCountdown, 1000);
     setInterval(() => renderBlocks(state.snapshot?.network?.blocks ?? []), 15000);

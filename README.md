@@ -1,8 +1,8 @@
-# Bitcoin Dashboard
+# The Amazing Bitcoin — Holo Dashboard
 
-Een realtime Bitcoin-dashboard als one-pager: licht en koel, met donkere panelen
-en een violet-blauw-cyaan spectrum als accentlijn. Puur statisch: HTML, CSS en JavaScript, zonder build-stap,
-server of API-keys.
+Een realtime Bitcoin-dashboard als one-pager, in holografische Marvel-comicstijl
+(foil-randen, halftone, POW!-bursts, speech bubbles). Puur statisch: HTML, CSS en
+JavaScript, zonder build-stap, server of API-keys.
 
 ## Databronnen
 
@@ -23,9 +23,7 @@ dan verbindt de pagina automatisch opnieuw.
 
 ```
 index.html          de pagina
-favicon.svg         icoon
-css/tokens.css      design tokens (kleur, ruimte, radius, schaduw, typografie)
-css/dashboard.css   layout en componenten
+css/dashboard.css   holo/comic-stijl
 js/data.js          ophalen en omzetten van de REST-bronnen
 js/dashboard.js     rendering, WebSockets, grafiek, effecten
 ```

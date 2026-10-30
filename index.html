@@ -1,271 +1,235 @@
 <!DOCTYPE html>
-<html lang="nl" data-theme="light">
+<html lang="nl">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="theme-color" content="#F7F8FA">
-    <title>Bitcoin Dashboard</title>
-    <meta name="description" content="Realtime Bitcoin-dashboard. Live koers via Coinbase, marktdata via CoinGecko en netwerkdata via mempool.space — allemaal publieke bronnen.">
+    <meta name="theme-color" content="#0b0820">
+    <title>The Amazing Bitcoin — Holo Dashboard</title>
+    <meta name="description" content="Realtime Bitcoin dashboard in holografische comic-stijl. Live koers via Coinbase, marktdata via CoinGecko en netwerkdata via mempool.space — allemaal publieke bronnen.">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/tokens.css">
+    <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Rubik:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/dashboard.css">
-    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%23f7931a' stroke='%23000' stroke-width='4'/%3E%3Ctext x='32' y='45' font-size='38' font-weight='900' text-anchor='middle' fill='%23fff' font-family='Arial'%3E%E2%82%BF%3C/text%3E%3C/svg%3E">
 </head>
 <body>
-    <a class="skip label" href="#koers">NAAR DE KOERS</a>
+    <div class="holo-bg" aria-hidden="true">
+        <span class="blob b1"></span><span class="blob b2"></span><span class="blob b3"></span>
+    </div>
+    <div class="halftone-bg" aria-hidden="true"></div>
 
-    <!-- ========== NAVIGATIE ========== -->
-    <header class="nav">
-        <a class="nav__brand" href="#">
-            <span class="dot" aria-hidden="true"></span>
-            <span class="label nav__product">BITCOIN DASHBOARD</span>
-        </a>
-        <nav class="nav__links" aria-label="Secties">
-            <a class="label nav__link" href="#koers">KOERS</a>
-            <a class="label nav__link" href="#markt">MARKT</a>
-            <a class="label nav__link" href="#netwerk">NETWERK</a>
-            <a class="label nav__link" href="#activiteit">ACTIVITEIT</a>
-        </nav>
-        <div class="nav__actions">
-            <span class="status label" id="live-pill" data-state="connecting">
-                <span class="status__dot"></span><span id="live-text">VERBINDEN</span>
-            </span>
-            <div class="segmented" role="group" aria-label="Valuta">
-                <button type="button" class="label" data-currency="eur">EUR</button>
-                <button type="button" class="label" data-currency="usd">USD</button>
+    
+    <div class="burst-layer" id="burst-layer" aria-hidden="true"></div>
+
+    <div class="page">
+
+        
+        <header class="masthead panel holo" data-tilt>
+            <div class="masthead-corner">
+                <span class="corner-label">Issue</span>
+                <span class="corner-issue" id="issue-number">#—</span>
+                <span class="corner-label">blok</span>
             </div>
-        </div>
-    </header>
 
-    <main>
-        <!-- ========== HERO: KOERS ========== -->
-        <section class="hero" id="koers" aria-labelledby="hero-title">
-            <div class="hero__copy">
-                <p class="eyebrow eyebrow--dot"><span class="dot"></span>LIVE BITCOINKOERS. ÉCHT REALTIME.</p>
-                <h1 class="display hero__title" id="hero-title">Bitcoin, live <span class="gradient-text">gevolgd.</span></h1>
-                <p class="body-lg hero__lead" id="hero-lead">Koers, markt en netwerk in één oogopslag. Rechtstreeks uit publieke bronnen, zonder vertraging.</p>
+            <div class="masthead-title">
+                <p class="kicker">Marvel-ous Satoshi Comics presenteert</p>
+                <h1 class="title">
+                    <span class="title-the">The Amazing</span>
+                    <span class="title-main holo-text" data-text="BITCOIN">BITCOIN</span>
+                </h1>
+                <p class="tagline">De realtime avonturen van ’s werelds meest onverwoestbare munt!</p>
+            </div>
 
-                <div class="price">
-                    <p class="caption price__label">1 BTC</p>
-                    <p class="price__value" id="price" aria-live="polite">—</p>
-                    <div class="price__meta">
-                        <span class="delta label" id="change-24h">— 24U</span>
-                        <span class="body-sm price__quote">BID <b id="bid">—</b></span>
-                        <span class="body-sm price__quote">ASK <b id="ask">—</b></span>
+            <div class="masthead-controls">
+                <div class="live-pill" id="live-pill" data-state="connecting">
+                    <span class="live-dot"></span>
+                    <span class="live-text" id="live-text">Verbinden…</span>
+                </div>
+                <div class="toggle" role="group" aria-label="Valuta">
+                    <button type="button" data-currency="eur">EUR €</button>
+                    <button type="button" data-currency="usd">USD $</button>
+                </div>
+            </div>
+        </header>
+
+        
+        <section class="hero">
+            <article class="panel holo price-panel" data-tilt>
+                <div class="caption-box">Ondertussen, op de beurs…</div>
+
+                <div class="price-wrap">
+                    <span class="btc-coin" aria-hidden="true">₿</span>
+                    <div>
+                        <div class="price-label">1 BTC =</div>
+                        <div class="price holo-text" id="price" aria-live="polite">—</div>
                     </div>
                 </div>
 
-                <div class="range" title="24-uurs bandbreedte">
-                    <div class="range__labels caption">
-                        <span>24U LAAG <b id="low-24h">—</b></span>
-                        <span>24U HOOG <b id="high-24h">—</b></span>
+                <div class="price-meta">
+                    <span class="badge" id="change-24h">— 24u</span>
+                    <span class="meta-item">Bid <b id="bid">—</b></span>
+                    <span class="meta-item">Ask <b id="ask">—</b></span>
+                    <span class="meta-item">Spread <b id="spread">—</b></span>
+                </div>
+
+                <div class="range-bar" title="24-uurs bandbreedte">
+                    <div class="range-labels">
+                        <span>24u laag <b id="low-24h">—</b></span>
+                        <span>24u hoog <b id="high-24h">—</b></span>
                     </div>
-                    <div class="range__track"><span class="range__fill" id="range-fill"></span><span class="range__thumb" id="range-thumb"></span></div>
+                    <div class="range-track"><span class="range-fill" id="range-fill"></span><span class="range-thumb" id="range-thumb"></span></div>
                 </div>
-            </div>
 
-            <div class="hero__media" data-theme="dark">
-                <div class="chart-head">
-                    <p class="caption chart-head__label">KOERSVERLOOP <span id="chart-change" class="chart-change">—</span></p>
-                    <div class="segmented segmented--dark" role="group" aria-label="Periode">
-                        <button type="button" class="label" data-range="1d">24U</button>
-                        <button type="button" class="label" data-range="7d">7D</button>
-                        <button type="button" class="label" data-range="30d">30D</button>
-                        <button type="button" class="label" data-range="1y">1J</button>
+                <div class="speech" id="speech">Hou je vast, true believer… de data komt eraan!</div>
+            </article>
+
+            <aside class="panel holo trades-panel" data-tilt>
+                <h2 class="panel-title"><span>Live trades</span><small>Coinbase</small></h2>
+                <ul class="trades" id="trades" aria-live="off">
+                    <li class="trades-empty">Wachten op de eerste trade…</li>
+                </ul>
+            </aside>
+        </section>
+
+        
+        <section class="panel holo chart-panel" data-tilt="soft">
+            <div class="chart-head">
+                <h2 class="panel-title"><span>Koersverloop</span><small id="chart-change">—</small></h2>
+                <div class="toggle" role="group" aria-label="Periode">
+                                            <button type="button" data-range="1d">24U</button>
+                                            <button type="button" data-range="7d">7D</button>
+                                            <button type="button" data-range="30d">30D</button>
+                                            <button type="button" data-range="1y">1J</button>
+                                    </div>
+            </div>
+            <div class="chart" id="chart">
+                <svg id="chart-svg" preserveAspectRatio="none" role="img" aria-label="Koersgrafiek Bitcoin"></svg>
+                <div class="chart-tip" id="chart-tip" hidden></div>
+                <div class="chart-status" id="chart-status">Grafiek laden…</div>
+            </div>
+        </section>
+
+        
+        <h2 class="chapter"><span>Hoofdstuk 1</span> De Markt</h2>
+        <section class="grid">
+            <article class="panel holo stat" data-tilt>
+                <div class="stat-label">Marktkapitalisatie</div>
+                <div class="stat-value" id="market-cap">—</div>
+                <div class="stat-sub">Rang <b>#1</b> — natuurlijk.</div>
+            </article>
+            <article class="panel holo stat" data-tilt>
+                <div class="stat-label">Volume 24u</div>
+                <div class="stat-value" id="volume">—</div>
+                <div class="stat-sub" id="volume-btc">—</div>
+            </article>
+            <article class="panel holo stat" data-tilt>
+                <div class="stat-label">All-time high</div>
+                <div class="stat-value" id="ath">—</div>
+                <div class="stat-sub" id="ath-sub">—</div>
+            </article>
+            <article class="panel holo stat" data-tilt>
+                <div class="stat-label">Performance</div>
+                <div class="perf" id="perf">
+                    <span data-perf="change_7d">7D <b>—</b></span>
+                    <span data-perf="change_30d">30D <b>—</b></span>
+                    <span data-perf="change_1y">1J <b>—</b></span>
+                </div>
+            </article>
+            <article class="panel holo stat wide" data-tilt>
+                <div class="stat-label">In omloop</div>
+                <div class="stat-value" id="supply">—</div>
+                <div class="progress"><span id="supply-bar"></span></div>
+                <div class="stat-sub" id="supply-sub">van de 21.000.000 die er ooit zullen zijn</div>
+            </article>
+            <article class="panel holo stat wide fng" data-tilt>
+                <div class="stat-label">Fear &amp; Greed</div>
+                <div class="gauge">
+                    <svg viewBox="0 0 200 110" aria-hidden="true">
+                        <defs>
+                            <linearGradient id="fng-grad" x1="0" x2="1">
+                                <stop offset="0" stop-color="#ff2e63"/>
+                                <stop offset=".5" stop-color="#ffe14d"/>
+                                <stop offset="1" stop-color="#2dffb3"/>
+                            </linearGradient>
+                        </defs>
+                        <path d="M15 100 A85 85 0 0 1 185 100" fill="none" stroke="#000" stroke-width="26" stroke-linecap="round"/>
+                        <path d="M15 100 A85 85 0 0 1 185 100" fill="none" stroke="url(#fng-grad)" stroke-width="18" stroke-linecap="round"/>
+                        <g id="fng-needle" style="transform-origin:100px 100px">
+                            <path d="M100 100 L96 30 L100 22 L104 30 Z" fill="#fff" stroke="#000" stroke-width="3" stroke-linejoin="round"/>
+                        </g>
+                        <circle cx="100" cy="100" r="10" fill="#fff" stroke="#000" stroke-width="4"/>
+                    </svg>
+                    <div class="gauge-read">
+                        <span class="gauge-value" id="fng-value">—</span>
+                        <span class="gauge-label" id="fng-label">—</span>
                     </div>
                 </div>
-                <div class="chart" id="chart">
-                    <svg id="chart-svg" preserveAspectRatio="none" role="img" aria-label="Koersgrafiek Bitcoin"></svg>
-                    <div class="chart-tip body-sm" id="chart-tip" hidden></div>
-                    <div class="chart-status label" id="chart-status">GRAFIEK LADEN</div>
+            </article>
+        </section>
+
+        
+        <h2 class="chapter"><span>Hoofdstuk 2</span> Het Netwerk</h2>
+        <section class="grid">
+            <article class="panel holo stat" data-tilt>
+                <div class="stat-label">Blokhoogte</div>
+                <div class="stat-value" id="height">—</div>
+                <div class="stat-sub" id="height-sub">—</div>
+            </article>
+            <article class="panel holo stat" data-tilt>
+                <div class="stat-label">Hashrate</div>
+                <div class="stat-value" id="hashrate">—</div>
+                <div class="stat-sub">Rekenkracht van alle miners</div>
+            </article>
+            <article class="panel holo stat" data-tilt>
+                <div class="stat-label">Mempool</div>
+                <div class="stat-value" id="mempool-count">—</div>
+                <div class="stat-sub" id="mempool-sub">—</div>
+            </article>
+            <article class="panel holo stat" data-tilt>
+                <div class="stat-label">Fees <small>sat/vB</small></div>
+                <div class="fees">
+                    <div><span>Laag</span><b id="fee-low">—</b></div>
+                    <div><span>Medium</span><b id="fee-mid">—</b></div>
+                    <div><span>Snel</span><b id="fee-high">—</b></div>
                 </div>
-                <dl class="stats" aria-label="Kerncijfers">
-                    <span class="stats__dot"></span>
-                    <div class="stats__item"><dt class="caption">SPREAD</dt><dd class="stat" id="spread">—</dd></div>
-                    <div class="stats__item"><dt class="caption">BLOK</dt><dd class="stat" id="issue-number">—</dd></div>
-                    <div class="stats__item"><dt class="caption">SENTIMENT</dt><dd class="stat" id="hero-fng">—</dd></div>
-                </dl>
-            </div>
-        </section>
-
-        <!-- ========== MARKT ========== -->
-        <section class="section" id="markt" aria-labelledby="markt-title">
-            <header class="section-header">
-                <div>
-                    <p class="eyebrow eyebrow--accent">MARKT</p>
-                    <h2 class="heading" id="markt-title">De markt in cijfers.</h2>
+            </article>
+            <article class="panel holo stat wide" data-tilt>
+                <div class="stat-label">Difficulty adjustment</div>
+                <div class="stat-value" id="diff-change">—</div>
+                <div class="progress"><span id="diff-bar"></span></div>
+                <div class="stat-sub" id="diff-sub">—</div>
+            </article>
+            <article class="panel holo stat wide halving" data-tilt>
+                <div class="stat-label">Volgende halving</div>
+                <div class="countdown" id="halving-countdown">
+                    <div><b data-unit="d">—</b><span>dagen</span></div>
+                    <div><b data-unit="h">—</b><span>uur</span></div>
+                    <div><b data-unit="m">—</b><span>min</span></div>
+                    <div><b data-unit="s">—</b><span>sec</span></div>
                 </div>
-                <p class="body-sm section-header__desc">Marktkapitalisatie, volume en sentiment, elke dertig seconden ververst via CoinGecko en alternative.me.</p>
-            </header>
-
-            <div class="cards">
-                <article class="card">
-                    <span class="card__icon" data-icon="trend-up"></span>
-                    <h3 class="caption card__label">MARKTKAPITALISATIE</h3>
-                    <p class="card__value" id="market-cap">—</p>
-                    <p class="body-sm card__text">Rang 1 van alle cryptomunten.</p>
-                </article>
-                <article class="card">
-                    <span class="card__icon" data-icon="zap"></span>
-                    <h3 class="caption card__label">VOLUME 24U</h3>
-                    <p class="card__value" id="volume">—</p>
-                    <p class="body-sm card__text" id="volume-btc">—</p>
-                </article>
-                <article class="card">
-                    <span class="card__icon" data-icon="future"></span>
-                    <h3 class="caption card__label">ALL-TIME HIGH</h3>
-                    <p class="card__value" id="ath">—</p>
-                    <p class="body-sm card__text" id="ath-sub">—</p>
-                </article>
-                <article class="card">
-                    <span class="card__icon" data-icon="code"></span>
-                    <h3 class="caption card__label">RENDEMENT</h3>
-                    <dl class="perf" id="perf">
-                        <div data-perf="change_7d"><dt class="label">7D</dt><dd class="body">—</dd></div>
-                        <div data-perf="change_30d"><dt class="label">30D</dt><dd class="body">—</dd></div>
-                        <div data-perf="change_1y"><dt class="label">1J</dt><dd class="body">—</dd></div>
-                    </dl>
-                </article>
-
-                <article class="card card--wide">
-                    <span class="card__icon" data-icon="lock"></span>
-                    <h3 class="caption card__label">IN OMLOOP</h3>
-                    <p class="card__value" id="supply">—</p>
-                    <div class="meter"><span id="supply-bar"></span></div>
-                    <p class="body-sm card__text" id="supply-sub">van de 21.000.000 die er ooit zullen zijn.</p>
-                </article>
-                <article class="card card--wide card--glow">
-                    <span class="card__icon" data-icon="shield"></span>
-                    <h3 class="caption card__label">FEAR &amp; GREED</h3>
-                    <div class="gauge">
-                        <svg viewBox="0 0 200 112" aria-hidden="true">
-                            <defs>
-                                <linearGradient id="fng-grad" x1="0" x2="1">
-                                    <stop offset="0" stop-color="#7C3AED"/>
-                                    <stop offset=".5" stop-color="#2563EB"/>
-                                    <stop offset="1" stop-color="#00F0FF"/>
-                                </linearGradient>
-                            </defs>
-                            <path d="M16 100 A84 84 0 0 1 184 100" fill="none" stroke="var(--line)" stroke-width="10" stroke-linecap="round"/>
-                            <path id="fng-arc" d="M16 100 A84 84 0 0 1 184 100" fill="none" stroke="url(#fng-grad)" stroke-width="10" stroke-linecap="round" pathLength="100" stroke-dasharray="0 100"/>
-                            <circle id="fng-knob" cx="16" cy="100" r="7" fill="var(--surface-raised)" stroke="var(--violet)" stroke-width="3"/>
-                        </svg>
-                        <div class="gauge__read">
-                            <span class="card__value" id="fng-value">—</span>
-                            <span class="label gauge__label" id="fng-label">—</span>
-                        </div>
-                    </div>
-                </article>
-            </div>
+                <div class="progress"><span id="halving-bar"></span></div>
+                <div class="stat-sub" id="halving-sub">—</div>
+            </article>
         </section>
 
-        <!-- ========== NETWERK (donker eiland) ========== -->
-        <section class="panel" id="netwerk" data-theme="dark" aria-labelledby="netwerk-title">
-            <header class="section-header">
-                <div>
-                    <p class="eyebrow eyebrow--accent">NETWERK</p>
-                    <h2 class="heading" id="netwerk-title">Het netwerk achter de munt.</h2>
-                </div>
-                <p class="body-sm section-header__desc">Blokken, fees en rekenkracht. Live via mempool.space, nieuwe blokken verschijnen direct.</p>
-            </header>
-
-            <div class="cards">
-                <article class="card">
-                    <h3 class="caption card__label">BLOKHOOGTE</h3>
-                    <p class="card__value" id="height">—</p>
-                    <p class="body-sm card__text" id="height-sub">—</p>
-                </article>
-                <article class="card">
-                    <h3 class="caption card__label">HASHRATE</h3>
-                    <p class="card__value" id="hashrate">—</p>
-                    <p class="body-sm card__text">Rekenkracht van alle miners.</p>
-                </article>
-                <article class="card">
-                    <h3 class="caption card__label">MEMPOOL</h3>
-                    <p class="card__value" id="mempool-count">—</p>
-                    <p class="body-sm card__text" id="mempool-sub">—</p>
-                </article>
-                <article class="card">
-                    <h3 class="caption card__label">FEES <span class="unit">SAT/VB</span></h3>
-                    <dl class="fees">
-                        <div><dt class="caption">LAAG</dt><dd class="stat" id="fee-low">—</dd></div>
-                        <div><dt class="caption">MIDDEN</dt><dd class="stat" id="fee-mid">—</dd></div>
-                        <div><dt class="caption">SNEL</dt><dd class="stat" id="fee-high">—</dd></div>
-                    </dl>
-                </article>
-
-                <article class="card card--wide">
-                    <h3 class="caption card__label">DIFFICULTY ADJUSTMENT</h3>
-                    <p class="card__value" id="diff-change">—</p>
-                    <div class="meter"><span id="diff-bar"></span></div>
-                    <p class="body-sm card__text" id="diff-sub">—</p>
-                </article>
-                <article class="card card--wide">
-                    <h3 class="caption card__label">VOLGENDE HALVING</h3>
-                    <dl class="countdown" id="halving-countdown">
-                        <div><dd class="card__value" data-unit="d">—</dd><dt class="caption">DAGEN</dt></div>
-                        <div><dd class="card__value" data-unit="h">—</dd><dt class="caption">UUR</dt></div>
-                        <div><dd class="card__value" data-unit="m">—</dd><dt class="caption">MIN</dt></div>
-                        <div><dd class="card__value" data-unit="s">—</dd><dt class="caption">SEC</dt></div>
-                    </dl>
-                    <div class="meter"><span id="halving-bar"></span></div>
-                    <p class="body-sm card__text" id="halving-sub">—</p>
-                </article>
-            </div>
+        
+        <h2 class="chapter"><span>Hoofdstuk 3</span> De Laatste Blokken</h2>
+        <section class="blocks" id="blocks">
+            <div class="block-empty">Blokken laden…</div>
         </section>
 
-        <!-- ========== ACTIVITEIT ========== -->
-        <section class="section" id="activiteit" aria-labelledby="activiteit-title">
-            <header class="section-header">
-                <div>
-                    <p class="eyebrow eyebrow--accent">ACTIVITEIT</p>
-                    <h2 class="heading" id="activiteit-title">Wat er nu gebeurt.</h2>
-                </div>
-                <p class="body-sm section-header__desc">Elke trade op Coinbase en elk nieuw blok, zodra het binnenkomt.</p>
-            </header>
-
-            <div class="activity">
-                <article class="card list-card">
-                    <h3 class="caption card__label">LIVE TRADES <span class="unit">COINBASE</span></h3>
-                    <ul class="trades" id="trades" aria-live="off">
-                        <li class="trades-empty body-sm">Wachten op de eerste trade.</li>
-                    </ul>
-                </article>
-                <article class="card list-card">
-                    <h3 class="caption card__label">LAATSTE BLOKKEN <span class="unit">MEMPOOL.SPACE</span></h3>
-                    <ol class="blocks" id="blocks">
-                        <li class="block-empty body-sm">Blokken laden.</li>
-                    </ol>
-                </article>
-            </div>
-        </section>
-
-        <!-- ========== CTA ========== -->
-        <section class="cta" data-theme="dark" aria-labelledby="cta-title">
-            <div>
-                <p class="eyebrow cta__eyebrow">BRONNEN</p>
-                <h2 class="heading" id="cta-title">Alleen publieke data. Geen API-keys.</h2>
-            </div>
-            <a class="label cta__action" href="https://github.com/markwinters/bitcoin-dash" target="_blank" rel="noopener">BEKIJK DE BRONCODE <span data-icon="arrow-up-right" data-size="16"></span></a>
-        </section>
-    </main>
-
-    <footer class="footer">
-        <div class="footer__brand">
-            <span class="dot" aria-hidden="true"></span>
-            <span class="body-sm">Bitcoin Dashboard</span>
-        </div>
-        <p class="body-sm footer__sources">
-            <a href="https://docs.cdp.coinbase.com/exchange/websocket-feed/overview" target="_blank" rel="noopener">Coinbase Exchange</a>
-            <a href="https://www.coingecko.com" target="_blank" rel="noopener">CoinGecko</a>
-            <a href="https://mempool.space" target="_blank" rel="noopener">mempool.space</a>
-            <a href="https://alternative.me/crypto/fear-and-greed-index/" target="_blank" rel="noopener">alternative.me</a>
-        </p>
-        <p class="body-sm footer__note">Geen financieel advies. Bijgewerkt <span id="updated-at">—</span></p>
-    </footer>
+        <footer class="footer">
+            <div class="caption-box">Wordt vervolgd…</div>
+            <p>
+                Live koers &amp; trades: <a href="https://docs.cdp.coinbase.com/exchange/websocket-feed/overview" target="_blank" rel="noopener">Coinbase Exchange</a> ·
+                Marktdata: <a href="https://www.coingecko.com" target="_blank" rel="noopener">CoinGecko</a> ·
+                Netwerk: <a href="https://mempool.space" target="_blank" rel="noopener">mempool.space</a> ·
+                Sentiment: <a href="https://alternative.me/crypto/fear-and-greed-index/" target="_blank" rel="noopener">alternative.me</a>
+            </p>
+            <p class="disclaimer">Geen financieel advies. Zelfs superhelden doen hun eigen onderzoek. · Laatste data-update <span id="updated-at">—</span></p>
+        </footer>
+    </div>
 
     <script src="js/data.js" defer></script>
     <script src="js/dashboard.js" defer></script>
