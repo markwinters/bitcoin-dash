@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Bitcoin Dashboard — ZwolseCode
+   Bitcoin Dashboard
    - Live koers + trades: Coinbase Exchange WebSocket (ticker channel)
    - Nieuwe blokken + fees: mempool.space WebSocket
    - Markt/netwerk-snapshot + grafiek: publieke API's via data.js
@@ -28,7 +28,7 @@
     if (!['usd', 'eur'].includes(state.currency)) state.currency = 'eur';
     if (!['1d', '7d', '30d', '1y'].includes(state.range)) state.range = '1d';
 
-    /* ---------- Iconen (ZwolseCode-set, lijn 1,5px op 24px-raster) ---------- */
+    /* ---------- Iconen (lijn 1,5px op 24px-raster) ---------- */
 
     const ICONS = {
         'zap': ['M13 2.75 4.75 13.25h6.5l-1 8 8.5-10.5h-6.5l.75-8Z'],
@@ -48,7 +48,7 @@
             const name = el.dataset.icon;
             const size = el.dataset.size || 32;
             const grad = !PLAIN.has(name);
-            const id = `zc-icon-${i}`;
+            const id = `icon-${i}`;
             el.innerHTML = `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="${grad ? `url(#${id})` : 'currentColor'}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 ${grad ? `<defs><linearGradient id="${id}" x1="3" y1="3" x2="21" y2="21" gradientUnits="userSpaceOnUse"><stop offset="0" style="stop-color:var(--icon-start)"/><stop offset="1" style="stop-color:var(--icon-end)"/></linearGradient></defs>` : ''}
                 ${ICONS[name].map((d) => `<path d="${d}"/>`).join('')}</svg>`;
@@ -109,7 +109,7 @@
         const el = $('#price');
 
         setText('price', money(price));
-        document.title = price ? `${money(price, 0)} — Bitcoin Dashboard — ZwolseCode` : 'Bitcoin Dashboard — ZwolseCode';
+        document.title = price ? `${money(price, 0)} — Bitcoin Dashboard` : 'Bitcoin Dashboard';
 
         // Korte kleurpuls bij een nieuwe tick: blauw omhoog, grijs omlaag.
         if (prevRendered != null && price != null && price !== prevRendered && !reducedMotion) {

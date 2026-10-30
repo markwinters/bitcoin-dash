@@ -1,8 +1,7 @@
-# Bitcoin Dashboard — ZwolseCode
+# Bitcoin Dashboard
 
-Een realtime Bitcoin-dashboard als one-pager, in de look and feel van het
-ZwolseCode design system: licht en koel, donkere eilanden, het violet-blauw-cyaan
-spectrum als lichtlijn. Puur statisch: HTML, CSS en JavaScript, zonder build-stap,
+Een realtime Bitcoin-dashboard als one-pager: licht en koel, met donkere panelen
+en een violet-blauw-cyaan spectrum als accentlijn. Puur statisch: HTML, CSS en JavaScript, zonder build-stap,
 server of API-keys.
 
 ## Databronnen
@@ -24,8 +23,8 @@ dan verbindt de pagina automatisch opnieuw.
 
 ```
 index.html          de pagina
-favicon.svg         ZwolseCode app-icoon
-css/tokens.css      design tokens (gegenereerd uit tokens.json van het design system)
+favicon.svg         icoon
+css/tokens.css      design tokens (kleur, ruimte, radius, schaduw, typografie)
 css/dashboard.css   layout en componenten
 js/data.js          ophalen en omzetten van de REST-bronnen
 js/dashboard.js     rendering, WebSockets, grafiek, effecten

@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Bitcoin Dashboard — ZwolseCode design system
+   Bitcoin Dashboard
    Kleuren, ruimte, radius, schaduw en typografie komen uit tokens.css.
    ========================================================================== */
 
@@ -55,9 +55,8 @@ a:focus-visible, button:focus-visible { outline: 2px solid transparent; box-shad
     -webkit-backdrop-filter: blur(var(--blur-glass)); backdrop-filter: blur(var(--blur-glass));
 }
 .nav::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 1px; background: var(--line); }
-.nav__brand { display: inline-flex; align-items: center; gap: var(--space-4); text-decoration: none; color: var(--ink); }
-.nav__mark { width: auto; height: var(--mark-nav); fill: currentColor; }
-.nav__product { color: var(--ink-secondary); }
+.nav__brand { display: inline-flex; align-items: center; gap: var(--space-3); min-height: var(--mark-nav); text-decoration: none; color: var(--ink); }
+.nav__product { color: var(--ink); }
 .nav__links { display: flex; justify-content: center; gap: var(--space-12); }
 .nav__link { padding: var(--space-2) 0; color: var(--ink-secondary); text-decoration: none; transition: color .2s ease-out; }
 .nav__link:hover { color: var(--ink); }
@@ -330,9 +329,7 @@ a:focus-visible, button:focus-visible { outline: 2px solid transparent; box-shad
     max-width: var(--content-max); margin: var(--space-16) auto 0;
     padding: var(--space-6) var(--gutter) var(--space-8); color: var(--ink-muted);
 }
-.footer__brand { display: flex; align-items: center; gap: var(--space-4); color: var(--ink); }
-.footer__brand span { color: var(--ink-muted); }
-.footer__mark { width: auto; height: 20px; fill: currentColor; }
+.footer__brand { display: flex; align-items: center; gap: var(--space-3); color: var(--ink-secondary); }
 .footer__sources { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-2) var(--space-8); }
 .footer a { text-decoration: none; transition: color .2s ease-out; }
 .footer a:hover { color: var(--ink); }
@@ -359,7 +356,6 @@ a:focus-visible, button:focus-visible { outline: 2px solid transparent; box-shad
 @media (max-width: 759px) {
     html { scroll-padding-top: 72px; }
     .nav { padding: var(--space-3) var(--gutter-mobile); gap: var(--space-4); }
-    .nav__product { display: none; }
     .nav__actions { gap: var(--space-2); }
     .hero__copy { padding: var(--space-12) var(--gutter-mobile) var(--space-8); }
     .hero__title { font-size: 48px; line-height: 50px; letter-spacing: -0.03em; } /* display-sm */

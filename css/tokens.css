@@ -1,4 +1,4 @@
-/* ZwolseCode — generated from tokens.json (ZwolseCode design system) */
+/* Design tokens: kleur (licht + donker), ruimte, radius, schaduw, gradient en typografie */
 :root, [data-theme="light"] {
   --black: #0F1115;
   --graphite: #2A2D34;
