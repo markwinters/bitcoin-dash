@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#0b0820">
+    <title>The Amazing Bitcoin — Holo Dashboard</title>
+    <meta name="description" content="Realtime Bitcoin dashboard in holografische comic-stijl. Live koers via Coinbase, marktdata via CoinGecko en netwerkdata via mempool.space.">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Rubik:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}?v={{ filemtime(public_path('css/dashboard.css')) }}">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%23f7931a' stroke='%23000' stroke-width='4'/%3E%3Ctext x='32' y='45' font-size='38' font-weight='900' text-anchor='middle' fill='%23fff' font-family='Arial'%3E%E2%82%BF%3C/text%3E%3C/svg%3E">
+</head>
+<body>
+    <div class="holo-bg" aria-hidden="true">
+        <span class="blob b1"></span><span class="blob b2"></span><span class="blob b3"></span>
+    </div>
+    <div class="halftone-bg" aria-hidden="true"></div>
+
+    {{-- Comic burst die verschijnt bij grote koersbewegingen of een nieuw blok --}}
+    <div class="burst-layer" id="burst-layer" aria-hidden="true"></div>
+
+    <div class="page">
+
+        {{-- ========== MASTHEAD ========== --}}
+        <header class="masthead panel holo" data-tilt>
+            <div class="masthead-corner">
+                <span class="corner-label">Issue</span>
+                <span class="corner-issue" id="issue-number">#—</span>
+                <span class="corner-label">blok</span>
+            </div>
+
+            <div class="masthead-title">
+                <p class="kicker">Marvel-ous Satoshi Comics presenteert</p>
+                <h1 class="title">
+                    <span class="title-the">The Amazing</span>
+                    <span class="title-main holo-text" data-text="BITCOIN">BITCOIN</span>
+                </h1>
+                <p class="tagline">De realtime avonturen van ’s werelds meest onverwoestbare munt!</p>
+            </div>
+
+            <div class="masthead-controls">
+                <div class="live-pill" id="live-pill" data-state="connecting">
+                    <span class="live-dot"></span>
+                    <span class="live-text" id="live-text">Verbinden…</span>
+                </div>
+                <div class="toggle" role="group" aria-label="Valuta">
+                    <button type="button" data-currency="eur">EUR €</button>
+                    <button type="button" data-currency="usd">USD $</button>
+                </div>
+            </div>
+        </header>
+
+        {{-- ========== HERO: PRIJS ========== --}}
+        <section class="hero">
+            <article class="panel holo price-panel" data-tilt>
+                <div class="caption-box">Ondertussen, op de beurs…</div>
+
+                <div class="price-wrap">
+                    <span class="btc-coin" aria-hidden="true">₿</span>
+                    <div>
+                        <div class="price-label">1 BTC =</div>
+                        <div class="price holo-text" id="price" aria-live="polite">—</div>
+                    </div>
+                </div>
+
+                <div class="price-meta">
+                    <span class="badge" id="change-24h">— 24u</span>
+                    <span class="meta-item">Bid <b id="bid">—</b></span>
+                    <span class="meta-item">Ask <b id="ask">—</b></span>
+                    <span class="meta-item">Spread <b id="spread">—</b></span>
+                </div>
+
+                <div class="range-bar" title="24-uurs bandbreedte">
+                    <div class="range-labels">
+                        <span>24u laag <b id="low-24h">—</b></span>
+                        <span>24u hoog <b id="high-24h">—</b></span>
+                    </div>
+                    <div class="range-track"><span class="range-fill" id="range-fill"></span><span class="range-thumb" id="range-thumb"></span></div>
+                </div>
+
+                <div class="speech" id="speech">Hou je vast, true believer… de data komt eraan!</div>
+            </article>
+
+            <aside class="panel holo trades-panel" data-tilt>
+                <h2 class="panel-title"><span>Live trades</span><small>Coinbase</small></h2>
+                <ul class="trades" id="trades" aria-live="off">
+                    <li class="trades-empty">Wachten op de eerste trade…</li>
+                </ul>
+            </aside>
+        </section>
+
+        {{-- ========== CHART ========== --}}
+        <section class="panel holo chart-panel" data-tilt="soft">
+            <div class="chart-head">
+                <h2 class="panel-title"><span>Koersverloop</span><small id="chart-change">—</small></h2>
+                <div class="toggle" role="group" aria-label="Periode">
+                    @foreach ($ranges as $range)
+                        <button type="button" data-range="{{ $range }}">{{ ['1d' => '24U', '7d' => '7D', '30d' => '30D', '1y' => '1J'][$range] ?? strtoupper($range) }}</button>
+                    @endforeach
+                </div>
+            </div>
+            <div class="chart" id="chart">
+                <svg id="chart-svg" preserveAspectRatio="none" role="img" aria-label="Koersgrafiek Bitcoin"></svg>
+                <div class="chart-tip" id="chart-tip" hidden></div>
+                <div class="chart-status" id="chart-status">Grafiek laden…</div>
+            </div>
+        </section>
+
+        {{-- ========== MARKT ========== --}}
+        <h2 class="chapter"><span>Hoofdstuk 1</span> De Markt</h2>
+        <section class="grid">
+            <article class="panel holo stat" data-tilt>
+                <div class="stat-label">Marktkapitalisatie</div>
+                <div class="stat-value" id="market-cap">—</div>
+                <div class="stat-sub">Rang <b>#1</b> — natuurlijk.</div>
+            </article>
+            <article class="panel holo stat" data-tilt>
+                <div class="stat-label">Volume 24u</div>
+                <div class="stat-value" id="volume">—</div>
+                <div class="stat-sub" id="volume-btc">—</div>
+            </article>
+            <article class="panel holo stat" data-tilt>
+                <div class="stat-label">All-time high</div>
+                <div class="stat-value" id="ath">—</div>
+                <div class="stat-sub" id="ath-sub">—</div>
+            </article>
+            <article class="panel holo stat" data-tilt>
+                <div class="stat-label">Performance</div>
+                <div class="perf" id="perf">
+                    <span data-perf="change_7d">7D <b>—</b></span>
+                    <span data-perf="change_30d">30D <b>—</b></span>
+                    <span data-perf="change_1y">1J <b>—</b></span>
+                </div>
+            </article>
+            <article class="panel holo stat wide" data-tilt>
+                <div class="stat-label">In omloop</div>
+                <div class="stat-value" id="supply">—</div>
+                <div class="progress"><span id="supply-bar"></span></div>
+                <div class="stat-sub" id="supply-sub">van de 21.000.000 die er ooit zullen zijn</div>
+            </article>
+            <article class="panel holo stat wide fng" data-tilt>
+                <div class="stat-label">Fear &amp; Greed</div>
+                <div class="gauge">
+                    <svg viewBox="0 0 200 110" aria-hidden="true">
+                        <defs>
+                            <linearGradient id="fng-grad" x1="0" x2="1">
+                                <stop offset="0" stop-color="#ff2e63"/>
+                                <stop offset=".5" stop-color="#ffe14d"/>
+                                <stop offset="1" stop-color="#2dffb3"/>
+                            </linearGradient>
+                        </defs>
+                        <path d="M15 100 A85 85 0 0 1 185 100" fill="none" stroke="#000" stroke-width="26" stroke-linecap="round"/>
+                        <path d="M15 100 A85 85 0 0 1 185 100" fill="none" stroke="url(#fng-grad)" stroke-width="18" stroke-linecap="round"/>
+                        <g id="fng-needle" style="transform-origin:100px 100px">
+                            <path d="M100 100 L96 30 L100 22 L104 30 Z" fill="#fff" stroke="#000" stroke-width="3" stroke-linejoin="round"/>
+                        </g>
+                        <circle cx="100" cy="100" r="10" fill="#fff" stroke="#000" stroke-width="4"/>
+                    </svg>
+                    <div class="gauge-read">
+                        <span class="gauge-value" id="fng-value">—</span>
+                        <span class="gauge-label" id="fng-label">—</span>
+                    </div>
+                </div>
+            </article>
+        </section>
+
+        {{-- ========== NETWERK ========== --}}
+        <h2 class="chapter"><span>Hoofdstuk 2</span> Het Netwerk</h2>
+        <section class="grid">
+            <article class="panel holo stat" data-tilt>
+                <div class="stat-label">Blokhoogte</div>
+                <div class="stat-value" id="height">—</div>
+                <div class="stat-sub" id="height-sub">—</div>
+            </article>
+            <article class="panel holo stat" data-tilt>
+                <div class="stat-label">Hashrate</div>
+                <div class="stat-value" id="hashrate">—</div>
+                <div class="stat-sub">Rekenkracht van alle miners</div>
+            </article>
+            <article class="panel holo stat" data-tilt>
+                <div class="stat-label">Mempool</div>
+                <div class="stat-value" id="mempool-count">—</div>
+                <div class="stat-sub" id="mempool-sub">—</div>
+            </article>
+            <article class="panel holo stat" data-tilt>
+                <div class="stat-label">Fees <small>sat/vB</small></div>
+                <div class="fees">
+                    <div><span>Laag</span><b id="fee-low">—</b></div>
+                    <div><span>Medium</span><b id="fee-mid">—</b></div>
+                    <div><span>Snel</span><b id="fee-high">—</b></div>
+                </div>
+            </article>
+            <article class="panel holo stat wide" data-tilt>
+                <div class="stat-label">Difficulty adjustment</div>
+                <div class="stat-value" id="diff-change">—</div>
+                <div class="progress"><span id="diff-bar"></span></div>
+                <div class="stat-sub" id="diff-sub">—</div>
+            </article>
+            <article class="panel holo stat wide halving" data-tilt>
+                <div class="stat-label">Volgende halving</div>
+                <div class="countdown" id="halving-countdown">
+                    <div><b data-unit="d">—</b><span>dagen</span></div>
+                    <div><b data-unit="h">—</b><span>uur</span></div>
+                    <div><b data-unit="m">—</b><span>min</span></div>
+                    <div><b data-unit="s">—</b><span>sec</span></div>
+                </div>
+                <div class="progress"><span id="halving-bar"></span></div>
+                <div class="stat-sub" id="halving-sub">—</div>
+            </article>
+        </section>
+
+        {{-- ========== BLOKKEN ========== --}}
+        <h2 class="chapter"><span>Hoofdstuk 3</span> De Laatste Blokken</h2>
+        <section class="blocks" id="blocks">
+            <div class="block-empty">Blokken laden…</div>
+        </section>
+
+        <footer class="footer">
+            <div class="caption-box">Wordt vervolgd…</div>
+            <p>
+                Live koers &amp; trades: <a href="https://docs.cdp.coinbase.com/exchange/websocket-feed/overview" target="_blank" rel="noopener">Coinbase Exchange</a> ·
+                Marktdata: <a href="https://www.coingecko.com" target="_blank" rel="noopener">CoinGecko</a> ·
+                Netwerk: <a href="https://mempool.space" target="_blank" rel="noopener">mempool.space</a> ·
+                Sentiment: <a href="https://alternative.me/crypto/fear-and-greed-index/" target="_blank" rel="noopener">alternative.me</a>
+            </p>
+            <p class="disclaimer">Geen financieel advies. Zelfs superhelden doen hun eigen onderzoek. · Laatste server-update <span id="updated-at">—</span></p>
+        </footer>
+    </div>
+
+    <script>
+        window.BTC_CONFIG = {
+            snapshot: @json($snapshot),
+            endpoints: {
+                snapshot: @json(route('bitcoin.snapshot')),
+                chart: @json(route('bitcoin.chart')),
+            },
+        };
+    </script>
+    <script src="{{ asset('js/dashboard.js') }}?v={{ filemtime(public_path('js/dashboard.js')) }}" defer></script>
+</body>
+</html>
